@@ -27,7 +27,7 @@ jobs:
         run: find app -name "*.php" -print0 | xargs -0 -n1 php -l
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer update --prefer-dist --no-progress
 
       - name: Run console for PHP ${{ matrix.php-version }}
         run: bin/console
