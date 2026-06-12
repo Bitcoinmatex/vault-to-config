@@ -1,5 +1,6 @@
 /vendor/
 /.idea
+/composer.lock
 /temp/*
 !/temp/.gitkeep
 /log/*

@@ -20,7 +20,7 @@ jobs:
           php-version: '8.4'
 
       - name: Install dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist
+        run: composer update --no-progress --no-suggest --prefer-dist
 
       - name: Run PHP_CodeSniffer
         run: vendor/bin/phpcs --standard=PSR1 app
