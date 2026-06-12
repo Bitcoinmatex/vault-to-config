@@ -1,0 +1,10 @@
+parameters:
+    level: 1
+    phpVersion: 80400
+    paths:
+        - app
+    bootstrapFiles:
+        - %rootDir%/../../../vendor/autoload.php
+    excludePaths:
+    universalObjectCratesClasses:
+        - Nextras\Orm\Entity\IEntity

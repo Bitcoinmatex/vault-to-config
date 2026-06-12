@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use App\Bootstrap;
+use Symfony\Component\Console\Application;
+
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "Composer autoload not found. Run `composer install` first.\n");
+    exit(1);
+}
+
+require $autoload;
+
+$container = (new Bootstrap())->bootConsoleApplication();
+
+/** @var Application $application */
+$application = $container->getByType(Application::class);
+
+exit($application->run());

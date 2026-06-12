@@ -1,0 +1,15 @@
+parameters:
+    environment: ci/exchange-api/dev
+    ATM_PUBLIC_KEY: GB325TFTD2C3S7MY3AXP3QSKUXVIX6RUWXTPP2IP26X6VDBIZHHUWNVX
+
+database:
+    dsn: null
+    user: null
+    password: null
+
+mail:
+    dsn: null
+
+services:
+    cache:
+        dsn: null

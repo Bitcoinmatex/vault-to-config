@@ -1,0 +1,35 @@
+name: PHP_CodeSniffer, Latte linter, Neon linter, PHPStan 1
+
+on:
+  pull_request: null
+  push:
+    branches:
+      - master
+
+jobs:
+  phpcs-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-suggest --prefer-dist
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs --standard=PSR1 app
+
+      - name: Run Neon linter
+        run: vendor/bin/neon-lint config
+
+      - name: Run PHPStan 10
+        run: vendor/bin/phpstan analyse --configuration=phpstan.neon --level=10
+
+      - name: Composer audit
+        run: composer audit --no-interaction --abandoned=ignore --format=plain

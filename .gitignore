@@ -1,0 +1,9 @@
+/vendor/
+/.idea
+/temp/*
+!/temp/.gitkeep
+/log/*
+!/log/.gitkeep
+
+# Lokalne prepisy a vygenerovane konfiguracie (tajomstva!) necommitovat
+/config/local.neon

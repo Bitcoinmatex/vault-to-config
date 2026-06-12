@@ -1,0 +1,70 @@
+name: PHP Syntax Check & phpstan
+
+on:
+  pull_request: null
+  push:
+    branches:
+      - master
+
+jobs:
+  phpstan-job:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3, 8.4, 8.5]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer
+
+      - name: Syntax Check app
+        run: find app -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run console for PHP ${{ matrix.php-version }}
+        run: bin/console
+
+      - name: Start fake Vault server
+        run: |
+          php -S 127.0.0.1:8200 tests/vault-server.php > vault-server.log 2>&1 &
+          echo "VAULT_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 30); do
+            if curl -fs -H 'X-Vault-Token: ci' http://127.0.0.1:8200/v1/sys/health > /dev/null; then
+              echo "Fake Vault is up"; exit 0
+            fi
+            sleep 0.3
+          done
+          echo "Fake Vault did not become ready"; cat vault-server.log; exit 1
+
+      - name: Compile NEON from Latte template via fake Vault
+        env:
+          VAULT_TOKEN: ci
+        run: |
+          php bin/console compile:latte dev examples/config.latte config/local.neon \
+            --vault-addr=http://127.0.0.1:8200 --kv-version=2 --mount=secret --secret-path='{env}' -v
+
+      - name: Verify the output NEON file was created
+        run: |
+          test -s config/local.neon || { echo "Output file config/local.neon is missing or empty"; exit 1; }
+          echo "--- config/local.neon ---"
+          cat config/local.neon
+
+      - name: Upload generated NEON as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-local-neon-php${{ matrix.php-version }}
+          path: config/local.neon
+          if-no-files-found: error
+
+      - name: Stop fake Vault server
+        if: always()
+        run: kill "$VAULT_PID" 2>/dev/null || true

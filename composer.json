@@ -1,0 +1,47 @@
+{
+    "name": "bitcoinmatex/vault-to-config",
+    "description": "Nette CLI app: renders a Latte configuration template using secrets from HashiCorp Vault and generates NEON for deployment.",
+    "type": "project",
+    "license": ["BSD-3-Clause", "GPL-2.0-only", "GPL-3.0-only"],
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*",
+        "nette/bootstrap": "^3.2",
+        "nette/robot-loader": "^4.0",
+        "nette/neon": "^3.4",
+        "tracy/tracy": "^2.10",
+        "latte/latte": "^3.0",
+        "symfony/console": "^6.4",
+        "symfony/http-client": "^6.4"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.11",
+        "phpstan/phpstan": "^2.0.4",
+        "phpstan/phpstan-nette": "^2.0",
+        "phpstan/extension-installer": "^1.4",
+        "slevomat/coding-standard": "^8.16",
+        "nette/tester": "^2.4",
+        "symfony/thanks": "^1"
+    },
+    "scripts": {
+        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2G",
+        "phpstan-baseline": "./vendor/bin/phpstan analyse --memory-limit=2G --generate-baseline",
+        "phpcs": "./vendor/bin/phpcs -p --colors -d memory_limit=-1 --standard=phpcs.xml app/",
+        "phpcbf": "./vendor/bin/phpcbf -p --colors -d memory_limit=-1 --standard=phpcbf.xml app/"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "bin": [
+        "bin/console"
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/thanks": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

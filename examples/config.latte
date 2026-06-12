@@ -1,0 +1,27 @@
+{contentType text}
+{*
+	VaultToConfig - example input template.
+
+	Available variables:
+	  {$environment}        - environment from the 1st argument (prod, staging, ...)
+	  {$vault['key']}       - any key from Vault (always works, even with dashes)
+	  {$key}                - shorthand, if the name is a valid PHP identifier
+
+	The |neon filter safely encodes the value as a NEON scalar (quotes + escaping),
+	so passwords and DSNs with the characters & " : # will not break the output.
+	It is recommended for all values coming from Vault.
+*}
+parameters:
+    environment: {$environment|neon}
+
+database:
+    dsn: {$db_dsn|neon}
+    user: {$db_user|neon}
+    password: {$db_password|neon}
+
+mail:
+    dsn: {$vault['mail-dsn']|neon}
+
+services:
+    cache:
+        dsn: {$redis_dsn|neon}

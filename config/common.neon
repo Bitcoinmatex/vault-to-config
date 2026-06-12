@@ -1,0 +1,10 @@
+parameters:
+
+
+services:
+    - App\Command\CompileLatteCommand
+
+    console.application:
+        factory: Symfony\Component\Console\Application('VaultToConfig', '1.0.0')
+        setup:
+            - add(@App\Command\CompileLatteCommand)

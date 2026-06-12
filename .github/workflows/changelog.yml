@@ -1,0 +1,117 @@
+name: CHANGELOG check
+
+on:
+  pull_request: null
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Verify CHANGELOG.md changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess, sys
+
+          BASE = os.environ["BASE_SHA"]
+          PATH = "CHANGELOG.md"
+          UNRELEASED_RE = re.compile(r"^##\s*\[Unreleased\]", re.IGNORECASE)
+          H2_RE = re.compile(r"^##\s+")
+
+          def fail(msg):
+              print(f"::error file={PATH}::{msg}")
+              sys.exit(1)
+
+          def unreleased_span(text):
+              """Return 1-based inclusive (start, end) of the [Unreleased] section, or None."""
+              lines = text.splitlines()
+              start = None
+              for i, line in enumerate(lines):
+                  if UNRELEASED_RE.match(line):
+                      start = i
+                      break
+              if start is None:
+                  return None
+              end = len(lines)
+              for i in range(start + 1, len(lines)):
+                  if H2_RE.match(lines[i]):
+                      end = i
+                      break
+              return (start + 1, end)
+
+          try:
+              old_text = subprocess.check_output(
+                  ["git", "show", f"{BASE}:{PATH}"], text=True, stderr=subprocess.DEVNULL,
+              )
+          except subprocess.CalledProcessError:
+              old_text = ""
+
+          try:
+              with open(PATH, encoding="utf-8") as f:
+                  new_text = f.read()
+          except FileNotFoundError:
+              fail(f"{PATH} is missing in this PR.")
+
+          new_span = unreleased_span(new_text)
+          if new_span is None:
+              fail(f'{PATH} must contain a "## [Unreleased]" section.')
+
+          old_span = unreleased_span(old_text)
+
+          diff = subprocess.check_output(
+              ["git", "diff", "--unified=0", f"{BASE}...HEAD", "--", PATH],
+              text=True,
+          )
+
+          if not diff.strip():
+              fail(f"{PATH} was not changed in this PR. Add an entry under ## [Unreleased].")
+
+          changed_in_new, changed_in_old = [], []
+          new_lineno = old_lineno = 0
+          hunk_re = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+          for line in diff.splitlines():
+              m = hunk_re.match(line)
+              if m:
+                  old_lineno = int(m.group(1))
+                  new_lineno = int(m.group(2))
+                  continue
+              if line.startswith(("diff ", "index ", "--- ", "+++ ")):
+                  continue
+              if line.startswith("+"):
+                  changed_in_new.append(new_lineno)
+                  new_lineno += 1
+              elif line.startswith("-"):
+                  changed_in_old.append(old_lineno)
+                  old_lineno += 1
+
+          def in_span(lineno, span):
+              if span is None:
+                  return False
+              start, end = span
+              return start <= lineno <= end
+
+          bad_new = [n for n in changed_in_new if not in_span(n, new_span)]
+          bad_old = [n for n in changed_in_old if not in_span(n, old_span)]
+
+          if bad_new or bad_old:
+              parts = []
+              if bad_new:
+                  parts.append(f"added/modified line(s) outside [Unreleased] (new file): {bad_new}")
+              if bad_old:
+                  parts.append(f"removed line(s) outside [Unreleased] (old file): {bad_old}")
+              fail(f"{PATH} may only be modified inside the ## [Unreleased] section. " + "; ".join(parts))
+
+          if not changed_in_new and not changed_in_old:
+              fail(f"{PATH} has no changes in this PR. Add an entry under ## [Unreleased].")
+
+          print(f"OK: {len(changed_in_new)} added / {len(changed_in_old)} removed line(s) under ## [Unreleased].")
+          PY
