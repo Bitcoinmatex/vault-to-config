@@ -3,3 +3,4 @@
 ## [Unreleased]
 ### Added
 - Initialization of project
+- Fix tests
