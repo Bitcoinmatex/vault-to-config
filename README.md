@@ -6,45 +6,12 @@ A CLI tool (a classic Nette application: Bootstrap + DI container, Latte, Symfon
 2. injects them as variables into a **Latte** template,
 3. validates the output as **NEON** and writes e.g. `local.neon` for deploying any Nette application.
 
-## Structure
-
-```
-VaultToConfig/
-├── app/
-│   ├── Bootstrap.php              # Nette Configurator + DI container
-│   ├── Command/
-│   │   └── CompileLatteCommand.php
-│   ├── Vault/
-│   │   ├── VaultClient.php        # KV v1/v2 HTTP client
-│   │   └── VaultException.php
-│   └── Latte/
-│       └── PlainTextFileLoader.php
-├── bin/
-│   └── console                    # entry point (container boot)
-├── config/
-│   └── common.neon                # DI services (command + Console Application)
-├── examples/
-│   └── config.latte               # example input template
-├── log/  temp/                     # writable for Nette/Tracy
-├── install.sh
-└── composer.json
-```
-
-(There is no `www/` web directory - this is a purely console application.)
-
-## Download, run, test
+## Download
 
 ```bash
-chmod +x install.sh
+composer create-project bitcoinmatex/vault-to-config
+cd vault-to-config
 ./install.sh
-```
-
-Run:
-
-```bash
-export VAULT_ADDR="https://vault.internal:8200"
-export VAULT_TOKEN="hvs.****"
-php bin/console compile:latte prod examples/config.latte config/local.neon --dry-run
 ```
 
 ## Usage
@@ -52,6 +19,12 @@ php bin/console compile:latte prod examples/config.latte config/local.neon --dry
 ```bash
 export VAULT_TOKEN="hvs.****"
 php bin/console compile:latte <environment> <input.latte> <output.neon>
+```
+
+For example:
+
+```bash
+bin/console compile:latte prod examples/config.latte config/local.neon --dry-run
 ```
 
 ## Environment variables
